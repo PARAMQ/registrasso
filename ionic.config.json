@@ -1,0 +1,7 @@
+{
+  "name": "registrasso-app",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
