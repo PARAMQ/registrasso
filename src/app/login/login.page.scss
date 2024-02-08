@@ -1,0 +1,55 @@
+.container {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to top, #78caba, #39bea7);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+.form-container {
+  background-color: inherit;
+}
+
+.form-container ion-input {
+  background-color: white;
+  font-family: "comfortaa-bold", sans-serif;
+  color: #39bea7;
+  border-radius: 20px;
+  text-align: center;
+  --highlight-color-focused: #39bea7;
+}
+
+.icon-input {
+  width: 20px;
+  height: 20px;
+}
+
+.btn-login {
+  width: 100%;
+  --border-style: solid;
+  --border-width: 1px;
+  --border-radius: 10px;
+  --border-color: #fff;
+  --background: linear-gradient(to right, #78caba, #39bea7);
+  font-family: "comfortaa-bold", sans-serif;
+  text-transform: capitalize;
+}
+
+.grid-container {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+}
+
+.text-btn {
+  text-align: center;
+  align-self: center;
+}
+
+.icon-btn {
+  width: 20px;
+  height: 20px;
+  justify-self: end;
+}

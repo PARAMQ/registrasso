@@ -10,17 +10,109 @@
  */
 
 /* Core CSS required for Ionic components to work properly */
-@import "@ionic/angular/css/core.css";
+@import "~@ionic/angular/css/core.css";
 
 /* Basic CSS for apps built with Ionic */
-@import "@ionic/angular/css/normalize.css";
-@import "@ionic/angular/css/structure.css";
-@import "@ionic/angular/css/typography.css";
-@import "@ionic/angular/css/display.css";
+@import "~@ionic/angular/css/normalize.css";
+@import "~@ionic/angular/css/structure.css";
+@import "~@ionic/angular/css/typography.css";
+@import "~@ionic/angular/css/display.css";
 
 /* Optional CSS utils that can be commented out */
-@import "@ionic/angular/css/padding.css";
-@import "@ionic/angular/css/float-elements.css";
-@import "@ionic/angular/css/text-alignment.css";
-@import "@ionic/angular/css/text-transformation.css";
-@import "@ionic/angular/css/flex-utils.css";
+@import "~@ionic/angular/css/padding.css";
+@import "~@ionic/angular/css/float-elements.css";
+@import "~@ionic/angular/css/text-alignment.css";
+@import "~@ionic/angular/css/text-transformation.css";
+@import "~@ionic/angular/css/flex-utils.css";
+
+/* Fonts variables */
+
+@font-face {
+  font-family: "comfortaa-light";
+  src: url(assets/fonts/Comfortaa-Light.ttf);
+}
+
+@font-face {
+  font-family: "comfortaa-medium";
+  src: url(assets/fonts/Comfortaa-Medium.ttf);
+}
+
+@font-face {
+  font-family: "comfortaa-regular";
+  src: url(assets/fonts/Comfortaa-Regular.ttf);
+}
+
+@font-face {
+  font-family: "comfortaa-semibold";
+  src: url(assets/fonts/Comfortaa-SemiBold.ttf);
+}
+
+@font-face {
+  font-family: "comfortaa-bold";
+  src: url(assets/fonts/Comfortaa-Bold.ttf);
+}
+
+/* Color variables */
+
+:root {
+  --ion-color-dark-blue: #00003d;
+  --ion-color-dark-blue-rgb: 0, 0, 61;
+  --ion-color-dark-blue-contrast: #ffffff;
+  --ion-color-dark-blue-contrast-rgb: 255, 255, 255;
+  --ion-color-dark-blue-shade: #000036;
+  --ion-color-dark-blue-tint: #1a1a50;
+  --ion-color-electric-blue: #1f71ec;
+  --ion-color-electric-blue-rgb: 31, 113, 236;
+  --ion-color-electric-blue-contrast: #ffffff;
+  --ion-color-electric-blue-contrast-rgb: 255, 255, 255;
+  --ion-color-electric-blue-shade: #1b63d0;
+  --ion-color-electric-blue-tint: #357fee;
+  --ion-color-cyan: #43f3fb;
+  --ion-color-cyan-rgb: 67, 243, 251;
+  --ion-color-cyan-contrast: #000000;
+  --ion-color-cyan-contrast-rgb: 0, 0, 0;
+  --ion-color-cyan-shade: #3bd6dd;
+  --ion-color-cyan-tint: #56f4fb;
+}
+
+.ion-color-dark-blue {
+  --ion-color-base: var(--ion-color-dark-blue);
+  --ion-color-base-rgb: var(--ion-color-dark-blue-rgb);
+  --ion-color-contrast: var(--ion-color-dark-blue-contrast);
+  --ion-color-contrast-rgb: var(--ion-color-dark-blue-contrast-rgb);
+  --ion-color-shade: var(--ion-color-dark-blue-shade);
+  --ion-color-tint: var(--ion-color-dark-blue-tint);
+}
+
+.ion-color-electric-blue {
+  --ion-color-base: var(--ion-color-electric-blue);
+  --ion-color-base-rgb: var(--ion-color-electric-blue-rgb);
+  --ion-color-contrast: var(--ion-color-electric-blue-contrast);
+  --ion-color-contrast-rgb: var(--ion-color-electric-blue-contrast-rgb);
+  --ion-color-shade: var(--ion-color-electric-blue-shade);
+  --ion-color-tint: var(--ion-color-electric-blue-tint);
+}
+
+.ion-color-cyan {
+  --ion-color-base: var(--ion-color-cyan);
+  --ion-color-base-rgb: var(--ion-color-cyan-rgb);
+  --ion-color-contrast: var(--ion-color-cyan-contrast);
+  --ion-color-contrast-rgb: var(--ion-color-cyan-contrast-rgb);
+  --ion-color-shade: var(--ion-color-cyan-shade);
+  --ion-color-tint: var(--ion-color-cyan-tint);
+}
+
+body.scanner-active {
+  --background: transparent;
+  --ion-background-color: transparent;
+}
+
+.custom-alert {
+  --background: white;
+}
+
+.custom-toast {
+  --background: #39bea7;
+  text-align: center;
+  font-family: "comfortaa-light", sans-serif;
+}

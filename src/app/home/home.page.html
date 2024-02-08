@@ -1,20 +1,178 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Blank
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
+<div *ngIf="isQrCameraActive">
+  <div class="header-camera-active">
+    <ion-header class="ion-no-border">
+      <div class="header-container">
+        <ion-img
+          src="../../assets/icon/LogoRegistrasso white.svg"
+          class="logo-header"
+        ></ion-img>
+        <ion-img
+          (click)="logout()"
+          src="../../assets/icon/sign-out.svg"
+          class="icon-header"
+        ></ion-img>
+      </div>
+    </ion-header>
+  </div>
+  <div class="header-activity-container ion-padding">
+    <ion-img
+      src="../../assets/icon/arrow-left-green.svg"
+      class="list-icon ion-text-center"
+      (click)="unselectActivityEvent()"
+    ></ion-img>
+    <div class="titles-container">
+      <span class="event-title">{{selectedEvent.event}}</span>
+      <span class="activity-title">{{selectedActivityEvent.name}}</span>
+    </div>
+  </div>
+  <div class="qr-body">
+    <div class="qr-border">
+      <div id="scanner-container" class="qr-container">
+        <ion-img
+          class="qr-img"
+          src="../../assets/icon/transparent-background.png"
+        ></ion-img>
+      </div>
+    </div>
+  </div>
+</div>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="true" id="content">
+  <div class="container">
+    <ion-header class="ion-no-border">
+      <div id="header" class="header-container">
+        <ion-img
+          src="../../assets/icon/LogoRegistrasso white.svg"
+          class="logo-header"
+        ></ion-img>
+        <ion-img
+          (click)="logout()"
+          src="../../assets/icon/sign-out.svg"
+          class="icon-header"
+        ></ion-img>
+      </div>
+    </ion-header>
 
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
+    <!-- vista con eventos -->
+
+    <ion-refresher
+      *ngIf="!selectedEvent && !selectedActivityEvent"
+      slot="fixed"
+      (ionRefresh)="handleRefresh($event)"
+    >
+      <ion-refresher-content></ion-refresher-content>
+    </ion-refresher>
+
+    <ion-list
+      class="list-container"
+      *ngIf="events.length && !selectedEvent && !selectedActivityEvent"
+    >
+      <ion-item *ngFor="let event of events" (click)="selectEvent(event.event)">
+        <div class="item-container">
+          <span class="list-item"> {{event.event}} </span>
+          <ion-img
+            class="list-icon"
+            src="../../assets/icon/arrow-right.svg"
+          ></ion-img>
+        </div>
+      </ion-item>
+    </ion-list>
+
+    <!-- vista sin eventos -->
+
+    <ion-list
+      class="list-container"
+      *ngIf="!events.length && !selectedEvent && !selectedActivityEvent"
+    >
+      <ion-item>
+        <span class="list-item-flex"> No hay eventos activos </span>
+      </ion-item>
+    </ion-list>
+
+    <div
+      *ngIf="!events.length && !selectedEvent && !selectedActivityEvent"
+      class="footer-container ion-no-border"
+    >
+      <ion-img
+        src="../../assets/icon/IsoRegistrasso.svg"
+        class="footer-logo"
+      ></ion-img>
+    </div>
+
+    <!-- vista de actividades -->
+
+    <div *ngIf="selectedEvent && !selectedActivityEvent && !cardUrl">
+      <div class="header-event-container ion-padding">
+        <ion-img
+          src="../../assets/icon/arrow-left.svg"
+          class="list-icon ion-text-center"
+          (click)="unselectEvent()"
+        ></ion-img>
+        <span>{{selectedEvent.event}}</span>
+      </div>
+      <ion-grid class="list-activities-container ion-no-padding">
+        <ion-row
+          *ngFor="let activity of selectedEvent.activities"
+          (click)="selectActivityEvent(activity)"
+          class="ion-justify-content-end"
+        >
+          <ion-col class="item-activity" size="11">
+            <span class="list-item"> {{activity.name}} </span>
+            <ion-img
+              class="list-icon"
+              src="../../assets/icon/arrow-right-green.svg"
+            ></ion-img>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </div>
+
+    <!-- vista de contenido de actividad -->
+
+    <div
+      *ngIf="selectedEvent && selectedActivityEvent && !isQrCameraActive && htmlResponse"
+      class="browser-container"
+    >
+      <ion-card class="browser-card">
+        <iframe
+          class="browser-content"
+          [src]="cardUrl"
+          frameborder="0"
+        ></iframe>
+      </ion-card>
+    </div>
+    <div
+      *ngIf="selectedEvent && selectedActivityEvent && !isQrCameraActive && htmlResponse"
+      class="ion-no-border browser-footer"
+    >
+      <div class="browser-footer-container">
+        <ion-grid [fixed]="true">
+          <ion-row class="ion-justify-content-center">
+            <ion-col size="2" class="ion-padding-horizontal">
+              <div class="back-btn" (click)="backToActivities()">
+                <ion-img
+                  class="back-btn-img"
+                  src="../../assets/icon/arrow-left.svg"
+                >
+                </ion-img>
+              </div>
+            </ion-col>
+            <ion-col
+              size="6"
+              class="ion-padding-horizontal"
+              *ngIf="htmlResponse?.request?.btn"
+            >
+              <div
+                class="action-btn"
+                [style.background]="htmlResponse?.request?.color"
+                (click)="handlerAction()"
+              >
+                <p>{{htmlResponse?.request?.btn}}</p>
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </div>
+    </div>
   </div>
 </ion-content>

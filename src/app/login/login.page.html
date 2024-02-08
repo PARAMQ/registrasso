@@ -1,0 +1,55 @@
+<ion-content [fullscreen]="true">
+  <div class="container">
+    <ion-img src="../../assets/icon/IsoRegistrasso.svg"></ion-img>
+    <div class="form-container">
+      <ion-grid>
+        <ion-row>
+          <ion-col>
+            <ion-input
+              fill="outline"
+              placeholder="Usuario"
+              class="ion-margin-top"
+              color="light"
+              [(ngModel)]="username"
+            >
+              <ion-img
+                src="../../assets/icon/user.svg"
+                slot="start"
+                class="icon-input"
+              ></ion-img>
+            </ion-input>
+
+            <ion-input
+              color="light"
+              fill="outline"
+              placeholder="Contraseña"
+              type="password"
+              class="ion-margin-top"
+              [(ngModel)]="password"
+            >
+              <ion-img
+                src="../../assets/icon/lock.svg"
+                slot="start"
+                class="icon-input"
+              ></ion-img>
+            </ion-input>
+          </ion-col>
+        </ion-row>
+        <ion-row class="ion-text-center">
+          <ion-col>
+            <ion-button class="btn-login" (click)="login()">
+              <div class="grid-container">
+                <span class="text-btn">Acceder</span>
+                <ion-img
+                  src="../../assets/icon/sign-in.svg"
+                  slot="end"
+                  class="icon-btn"
+                ></ion-img>
+              </div>
+            </ion-button>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </div>
+  </div>
+</ion-content>
