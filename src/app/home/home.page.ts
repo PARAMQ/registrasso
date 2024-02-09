@@ -4,7 +4,7 @@ import {
   ChangeDetectorRef,
   HostListener,
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { ChildActivationEnd, Router } from '@angular/router';
 import { WarningsService } from '../services/warnings.service';
 import {
   BarcodeScanner,
@@ -52,6 +52,7 @@ export class HomePage {
   htmlResponse: any = null;
   token: string = '';
   cardUrl: any = null;
+  actionRequested: string | null = null;
 
   constructor(
     private router: Router,
@@ -223,6 +224,7 @@ export class HomePage {
   }
 
   async selectActivityEvent(activityEvent: object) {
+    console.log('me ejecuto');
     // Modo producción
     const allowed = await this.checkPermission();
     if (allowed) {
@@ -246,6 +248,7 @@ export class HomePage {
 
   unselectActivityEvent() {
     this.stopScanner();
+    this.actionRequested = null;
     this.result = null;
     this.selectedActivityEvent = null;
     if (this.selectedEvent.activities.length === 1) {
@@ -362,13 +365,24 @@ export class HomePage {
     event.target.complete();
   }
 
-  backToActivities() {
+  async backToActivities() {
+    this.actionRequested = null;
     this.htmlResponse = null;
     this.cardUrl = null;
     this.result = null;
-    this.selectedActivityEvent = null;
-    if (this.selectedEvent.activities.length === 1) {
-      this.selectedEvent = null;
+    // this.selectedActivityEvent = null;
+    // if (this.selectedEvent.activities.length === 1) {
+    //   this.selectedEvent = null;
+    // }
+    const allowed = await this.checkPermission();
+    if (allowed) {
+      this.renderer.addClass(
+        document.getElementById('content'),
+        'scanner-active'
+      );
+      this.renderer.addClass(document.body, 'scanner-active');
+      this.isQrCameraActive = true;
+      await this.startScanner();
     }
     this.cdr.detectChanges();
   }
@@ -381,12 +395,10 @@ export class HomePage {
       loading.present();
       const res = await this.api.postAction(url, kioskId, this.token);
       console.log(res);
-      const message = res?.message;
-      const alert = await this.advertising.showAlert(message);
-      alert.present();
+      this.actionRequested = res?.message;
 
       // Modo producción
-      await this.postQr(this.result);
+      // await this.postQr(this.result);
 
       // Modo testing
       // await this.postQr(

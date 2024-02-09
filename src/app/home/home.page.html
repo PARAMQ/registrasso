@@ -160,14 +160,23 @@
             <ion-col
               size="6"
               class="ion-padding-horizontal"
-              *ngIf="htmlResponse?.request?.btn"
+              *ngIf="htmlResponse?.request?.btn && !actionRequested"
             >
               <div
                 class="action-btn"
                 [style.background]="htmlResponse?.request?.color"
                 (click)="handlerAction()"
               >
-                <p>{{htmlResponse?.request?.btn}}</p>
+                <p *ngIf="!actionRequested">{{htmlResponse?.request?.btn}}</p>
+              </div>
+            </ion-col>
+            <ion-col
+              size="8"
+              class="ion-padding-horizontal"
+              *ngIf="actionRequested"
+            >
+              <div class="action-btn">
+                <p>{{actionRequested}}</p>
               </div>
             </ion-col>
           </ion-row>
