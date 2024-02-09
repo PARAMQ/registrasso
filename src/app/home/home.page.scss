@@ -294,3 +294,16 @@ p {
   font-family: "comfortaa-semibold", sans-serif;
   background: linear-gradient(to right, #78caba, #39bea7);
 }
+
+.action-requested {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: white;
+  font-family: "comfortaa-semibold", sans-serif;
+  font-size: 0.9em;
+  background: transparent;
+}
