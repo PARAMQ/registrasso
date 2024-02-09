@@ -339,6 +339,7 @@ export class HomePage {
             },
           ],
         });
+        alert.present();
       } else {
         resolve(false);
       }
