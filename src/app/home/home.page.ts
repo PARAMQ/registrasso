@@ -398,6 +398,7 @@ export class HomePage {
       console.log(res);
       this.actionRequested = res?.message;
       if (res?.close == true) {
+        loading.dismiss();
         await this.backToActivities();
       }
 
