@@ -4,7 +4,8 @@
 
 export const environment = {
   production: false,
-  api: 'https://papion.demo.affenbits.com/api/',
+  // api: 'https://papion.demo.affenbits.com/api/',
+  api: 'https://app.registrasso.com/api/',
 };
 
 /*

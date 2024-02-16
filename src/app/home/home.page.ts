@@ -397,6 +397,9 @@ export class HomePage {
       const res = await this.api.postAction(url, kioskId, this.token);
       console.log(res);
       this.actionRequested = res?.message;
+      if (res?.close == true) {
+        await this.backToActivities();
+      }
 
       // Modo producción
       // await this.postQr(this.result);
