@@ -46,6 +46,18 @@ export class ApiService {
     return lastValueFrom(this.http.post<any>(url, body, { headers: headers }));
   }
 
+  postQrTwo(code: string, kioskId: any, token: string) {
+    const url = this.url + 'attendees/code';
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
+    const body = new FormData();
+    body.append('kiosk', kioskId);
+    body.append('code', code);
+
+    return lastValueFrom(this.http.post<any>(url, body, { headers: headers }));
+  }
+
   // Action button Post //
 
   postAction(url: string, kioskId: any, token: string) {

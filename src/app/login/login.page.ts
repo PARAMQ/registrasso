@@ -31,7 +31,7 @@ export class LoginPage implements OnInit {
         const res: any = await this.api.login(this.username, this.password);
         await this.data.setToken(res?.jwt);
         console.log(res.jwt);
-        console.log(this.data.getToken());
+        console.log(await this.data.getToken());
         this.router.navigate(['home']);
       } catch (err: any) {
         if (err?.statusText === 'Unauthorized') {

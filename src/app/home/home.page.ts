@@ -224,7 +224,6 @@ export class HomePage {
   }
 
   async selectActivityEvent(activityEvent: object) {
-    console.log('me ejecuto');
     // Modo producción
     const allowed = await this.checkPermission();
     if (allowed) {
@@ -271,24 +270,50 @@ export class HomePage {
       // await this.postQr(this.result);
 
       try {
-        await this.postQr(this.result);
-        if (!this.htmlResponse) {
-          BarcodeScanner.stopScan();
-          const toast = await this.toast.create({
-            message: 'Qr inválido',
-            duration: 3000,
-            cssClass: 'custom-toast',
-            position: 'bottom',
-          });
-          toast.present();
-          this.startScanner();
-          return;
+        const isUrl = this.isValidUrl(this.result);
+        if (isUrl) {
+          await this.postQr(this.result);
+          if (!this.htmlResponse) {
+            BarcodeScanner.stopScan();
+            const toast = await this.toast.create({
+              message: 'Qr inválido',
+              duration: 3000,
+              cssClass: 'custom-toast',
+              position: 'bottom',
+            });
+            toast.present();
+            this.startScanner();
+            return;
+          } else {
+            this.stopScanner();
+          }
         } else {
-          this.stopScanner();
+          await this.postQrTwo(this.result);
+          if (!this.htmlResponse) {
+            BarcodeScanner.stopScan();
+            const toast = await this.toast.create({
+              message: 'Qr inválido',
+              duration: 3000,
+              cssClass: 'custom-toast',
+              position: 'bottom',
+            });
+            toast.present();
+            this.startScanner();
+            return;
+          } else {
+            this.stopScanner();
+          }
         }
       } catch (err) {
-        const alert = await this.advertising.showAlert('Código inválido');
-        alert.present();
+        BarcodeScanner.stopScan();
+        const toast = await this.toast.create({
+          message: 'Qr inválido',
+          duration: 3000,
+          cssClass: 'custom-toast',
+          position: 'bottom',
+        });
+        toast.present();
+        this.startScanner();
         return;
       }
     }
@@ -316,9 +341,33 @@ export class HomePage {
     }
   }
 
+  async postQrTwo(qrResult: string) {
+    try {
+      const res = await this.api.postQrTwo(
+        qrResult,
+        this.selectedActivityEvent.id,
+        this.token
+      );
+      if (res?.card) {
+        this.htmlResponse = res;
+        this.cardUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+          this.htmlResponse.card
+        );
+        this.cdr.detectChanges();
+        console.log(this.htmlResponse);
+      } else {
+        this.htmlResponse = null;
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   async checkPermission() {
     return new Promise(async (resolve, reject) => {
-      const status = await BarcodeScanner.checkPermission({ force: true });
+      const status = await BarcodeScanner.checkPermission({
+        force: true,
+      });
       if (status.granted) {
         resolve(true);
       } else if (status.denied) {
@@ -343,8 +392,17 @@ export class HomePage {
       } else {
         resolve(false);
       }
+      console.log(status);
     });
     return status;
+  }
+
+  isValidUrl(url: string) {
+    // Implementa la lógica para verificar si la cadena es una URL válida
+    // Puedes usar expresiones regulares u otras técnicas
+    // Devuelve true si es una URL válida, false si no lo es
+    // Ejemplo simple para verificar si comienza con "http" o "https"
+    return /^https?:\/\//.test(url);
   }
 
   stopScanner() {
