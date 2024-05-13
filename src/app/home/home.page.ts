@@ -130,7 +130,7 @@ export class HomePage {
                 )
               ) {
                 const activity = {
-                  id: parseInt(activityId, 10),
+                  id: activityId,
                   name: inputObject[eventName][activityId],
                 };
 
