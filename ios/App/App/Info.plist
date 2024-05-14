@@ -47,5 +47,7 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Necesario para la lectura de códigos qr</string>
+<key>NFCReaderUsageDescription</key>
+<string>Necesario para la lectura de tarjetas NFC</string>
 </dict>
 </plist>
