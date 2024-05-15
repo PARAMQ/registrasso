@@ -46,6 +46,8 @@
 
     <!-- vista con eventos -->
 
+    <ion-button *ngIf="isNfcAvailable" (click)="startNfcScan()">NFC</ion-button>
+
     <ion-refresher
       *ngIf="!selectedEvent && !selectedActivityEvent"
       slot="fixed"
