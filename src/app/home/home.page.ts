@@ -508,8 +508,45 @@ export class HomePage {
   }
 
   async startNfcScan() {
-    const isEnabled = await this.checkNfcEnabled();
-    if (isEnabled) {
+    const isAndroidDevice = this.checkPlatform();
+
+    if (isAndroidDevice) {
+      const isEnabled = await this.checkNfcEnabled();
+      if (isEnabled) {
+        const alert = await this.advertising.showAlert('NFC activado');
+        return new Promise((resolve) => {
+          Nfc.addListener('nfcTagScanned', async (event) => {
+            await Nfc.makeReadOnly();
+            console.log('Etiqueta NFC escaneada:', event.nfcTag);
+            const alert = await this.advertising.showAlert(
+              'Etiqueta NFC escaneada: ' + event.nfcTag
+            );
+            alert.present();
+            await Nfc.stopScanSession();
+            this.isNfcActive = false;
+            resolve(event);
+          });
+
+          this.isNfcActive = true;
+          Nfc.startScanSession();
+          alert.present();
+        });
+      } else {
+        // Si el NFC no está habilitado, abrir la configuración
+        const openSettings = async () => {
+          await Nfc.openSettings();
+        };
+
+        const alert = await this.advertising.showConfirmationAlert(
+          'Debes activar el NFC en tu dispositivo',
+          openSettings
+        );
+
+        alert.present();
+        // Retornar una promesa resuelta para mantener consistencia
+        return Promise.resolve();
+      }
+    } else {
       const alert = await this.advertising.showAlert('NFC activado');
       return new Promise((resolve) => {
         Nfc.addListener('nfcTagScanned', async (event) => {
@@ -528,30 +565,6 @@ export class HomePage {
         Nfc.startScanSession();
         alert.present();
       });
-    } else {
-      const isAndroidDevice = this.checkPlatform();
-
-      if (isAndroidDevice) {
-        // Si el NFC no está habilitado, abrir la configuración
-        const openSettings = async () => {
-          await Nfc.openSettings();
-        };
-
-        const alert = await this.advertising.showConfirmationAlert(
-          'Debes activar el NFC en tu dispositivo',
-          openSettings
-        );
-
-        alert.present();
-      } else {
-        const alert = await this.advertising.showAlert(
-          'Debes activar el NFC en tu dispositivo'
-        );
-        alert.present();
-      }
-
-      // Retornar una promesa resuelta para mantener consistencia
-      return Promise.resolve();
     }
   }
 }
