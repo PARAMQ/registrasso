@@ -69,3 +69,7 @@ Thumbs.db
 
 resources/ios/**/*
 resources/android/**/*
+
+# Android and ios folders
+android/
+ios/

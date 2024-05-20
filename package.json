@@ -32,6 +32,7 @@
     "@capawesome-team/capacitor-nfc": "^4.0.0-dev.b27cc99.1680895427",
     "@ionic/angular": "^7.0.0",
     "@ionic/storage-angular": "^4.0.0",
+    "@ngneat/until-destroy": "^10.0.0",
     "ionicons": "^7.0.0",
     "jwt-decode": "^4.0.0",
     "rxjs": "~7.8.0",

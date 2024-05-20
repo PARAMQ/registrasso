@@ -14,13 +14,16 @@ import { AlertController, Platform, ToastController } from '@ionic/angular';
 import { ApiService } from '../services/api.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { UserDataService } from '../services/user-data.service';
-import { Nfc, NfcUtils, NfcTagTechType } from '@capawesome-team/capacitor-nfc';
 import { Capacitor } from '@capacitor/core';
+import { NfcService } from '../services/nfc.service';
+import { NfcTag } from '@capawesome-team/capacitor-nfc';
+import { Observable, take } from 'rxjs';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
-  styleUrls: ['home.page.scss'],
+  styleUrls: ['home.page.scss']
 })
 export class HomePage {
   @HostListener('document:keydown', ['$event'])
@@ -46,6 +49,7 @@ export class HomePage {
     locale: 'es',
     localePrefix: '',
   };
+
   events: any[] = [];
   selectedEvent: any = null;
   selectedActivityEvent: any = null;
@@ -56,8 +60,8 @@ export class HomePage {
   cardUrl: any = null;
   actionRequested: string | null = null;
   isNfcAvailable: boolean = false;
-  isNfcEnabled: boolean = false;
-  isNfcActive: boolean = false;
+  platformDevice: string = '';
+  nfcMessage: string = '';
 
   constructor(
     private router: Router,
@@ -69,7 +73,8 @@ export class HomePage {
     private sanitizer: DomSanitizer,
     private data: UserDataService,
     private toast: ToastController,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private nfcService: NfcService
   ) {
     // this.randomlyModifyEvents();
     this.initializeBackButtonCustomHandler();
@@ -170,7 +175,8 @@ export class HomePage {
   async ionViewDidEnter() {
     await this.getToken();
     await this.getKiosks();
-    await this.checkNfcAvailability();
+    this.platformDevice = this.nfcService.getPlatform()
+    this.isNfcAvailable = await this.nfcService.isSupported()
   }
 
   initializeBackButtonCustomHandler(): void {
@@ -484,87 +490,21 @@ export class HomePage {
     }
   }
 
-  checkPlatform() {
-    const platform = Capacitor.getPlatform();
-    if (platform === 'android') {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  async checkNfcAvailability() {
-    const isSupported = await Nfc.isSupported();
-    if (isSupported) {
-      this.isNfcAvailable = true;
-    }
-  }
-
-  async checkNfcEnabled() {
-    const { isEnabled } = await Nfc.isEnabled();
-    // const alert = await this.advertising.showAlert(JSON.stringify(isEnabled));
-    // alert.present();
-    return isEnabled;
-  }
-
   async startNfcScan() {
-    const isAndroidDevice = this.checkPlatform();
-
-    if (isAndroidDevice) {
-      const isEnabled = await this.checkNfcEnabled();
-      if (isEnabled) {
-        const alert = await this.advertising.showAlert('NFC activado');
-        return new Promise((resolve) => {
-          Nfc.addListener('nfcTagScanned', async (event) => {
-            await Nfc.makeReadOnly();
-            console.log('Etiqueta NFC escaneada:', event.nfcTag);
-            const alert = await this.advertising.showAlert(
-              'Etiqueta NFC escaneada: ' + event.nfcTag
-            );
-            alert.present();
-            await Nfc.stopScanSession();
-            this.isNfcActive = false;
-            resolve(event);
+    if (this.isNfcAvailable) {
+      console.log('el dispositivo si soporta NFC')
+      const scannedTag = this.nfcService.scannedTag$
+      this.nfcService.startScanSession()
+      if (this.platformDevice === 'ios') {
+        scannedTag.pipe(take(1), untilDestroyed(this))
+          .subscribe(async () => {
+            await this.nfcService.stopScanSession()
+            // Aquí se almacena el valor convertido en el TAG NFC
+            this.nfcMessage = this.nfcService.message
           });
-
-          this.isNfcActive = true;
-          Nfc.startScanSession();
-          alert.present();
-        });
-      } else {
-        // Si el NFC no está habilitado, abrir la configuración
-        const openSettings = async () => {
-          await Nfc.openSettings();
-        };
-
-        const alert = await this.advertising.showConfirmationAlert(
-          'Debes activar el NFC en tu dispositivo',
-          openSettings
-        );
-
-        alert.present();
-        // Retornar una promesa resuelta para mantener consistencia
-        return Promise.resolve();
       }
     } else {
-      const alert = await this.advertising.showAlert('NFC activado');
-      return new Promise((resolve) => {
-        Nfc.addListener('nfcTagScanned', async (event) => {
-          await Nfc.makeReadOnly();
-          console.log('Etiqueta NFC escaneada:', event.nfcTag);
-          const alert = await this.advertising.showAlert(
-            'Etiqueta NFC escaneada: ' + event.nfcTag
-          );
-          alert.present();
-          await Nfc.stopScanSession();
-          this.isNfcActive = false;
-          resolve(event);
-        });
-
-        this.isNfcActive = true;
-        Nfc.startScanSession();
-        alert.present();
-      });
+      console.log('el dispositivo no soporta NFC')
     }
   }
 }
