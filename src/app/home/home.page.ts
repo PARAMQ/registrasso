@@ -494,7 +494,7 @@ export class HomePage {
     if (this.isNfcAvailable) {
       console.log('el dispositivo si soporta NFC')
       const scannedTag = this.nfcService.scannedTag$
-      this.nfcService.startScanSession()
+      await this.nfcService.startScanSession()
       if (this.platformDevice === 'ios') {
         scannedTag.pipe(take(1), untilDestroyed(this))
           .subscribe(async () => {
@@ -502,6 +502,9 @@ export class HomePage {
             // Aquí se almacena el valor convertido en el TAG NFC
             this.nfcMessage = this.nfcService.message
           });
+      } else {
+        // Aquí se almacena el valor convertido en el TAG NFC
+        this.nfcMessage = this.nfcService.message
       }
     } else {
       console.log('el dispositivo no soporta NFC')
