@@ -1,4 +1,4 @@
-<div *ngIf="isQrCameraActive">
+<div *ngIf="isQrCameraActive || isNFCActive">
   <div class="header-camera-active">
     <ion-header class="ion-no-border">
       <div class="header-container">
@@ -25,7 +25,33 @@
       <span class="activity-title">{{selectedActivityEvent.name}}</span>
     </div>
   </div>
-  <div class="qr-body" id="scanner-container"></div>
+  <div
+    class="qr-body"
+    id="scanner-container"
+    *ngIf="isQrCameraActive && !isNFCActive"
+  >
+    <div
+      class="bottom-left-img"
+      (click)="changeScanner()"
+      *ngIf="selectedActivityEvent.nfc && isNfcAvailable"
+    >
+      <ion-img src="../../assets/icon/qr.svg"></ion-img>
+    </div>
+  </div>
+  <div
+    class="nfc-body"
+    id="scanner-container"
+    *ngIf="!isQrCameraActive && isNFCActive"
+  >
+    <ion-img src="../../assets/icon/nfc.svg" class="ion-text-center"></ion-img>
+    <div
+      class="bottom-left-img"
+      (click)="changeScanner()"
+      *ngIf="selectedActivityEvent.qr"
+    >
+      <ion-img src="../../assets/icon/qr.svg"></ion-img>
+    </div>
+  </div>
 </div>
 
 <ion-content [fullscreen]="true" id="content">
@@ -46,7 +72,7 @@
 
     <!-- vista con eventos -->
 
-    <ion-button *ngIf="isNfcAvailable" (click)="startNfcScan()">NFC</ion-button>
+    <!-- <ion-button *ngIf="isNfcAvailable" (click)="startNfcScan()">NFC</ion-button> -->
 
     <ion-refresher
       *ngIf="!selectedEvent && !selectedActivityEvent"
@@ -58,7 +84,7 @@
 
     <ion-list
       class="list-container"
-      *ngIf="events.length && !selectedEvent && !selectedActivityEvent"
+      *ngIf="events.length && !selectedEvent && !selectedActivityEvent && !isLoadingData && !htmlResponse"
     >
       <ion-item *ngFor="let event of events" (click)="selectEvent(event.event)">
         <div class="item-container">
@@ -75,21 +101,43 @@
 
     <ion-list
       class="list-container"
-      *ngIf="!events.length && !selectedEvent && !selectedActivityEvent"
+      *ngIf="!events.length && !selectedEvent && !selectedActivityEvent && !isLoadingData && !htmlResponse"
     >
       <ion-item>
         <span class="list-item-flex"> No hay eventos activos </span>
       </ion-item>
     </ion-list>
 
+    <ion-img
+      *ngIf="!events.length && !selectedEvent && !selectedActivityEvent && !isLoadingData && !htmlResponse"
+      src="../../assets/icon/IsoRegistrasso.svg"
+      class="footer-logo"
+    ></ion-img>
+
     <div
-      *ngIf="!events.length && !selectedEvent && !selectedActivityEvent"
+      *ngIf="!selectedEvent && !selectedActivityEvent && !isLoadingData && isContacts && !htmlResponse"
       class="footer-container ion-no-border"
     >
-      <ion-img
-        src="../../assets/icon/IsoRegistrasso.svg"
-        class="footer-logo"
-      ></ion-img>
+      <ion-grid class="footer__contacts">
+        <ion-row>
+          <ion-col size="6" class="footer__btn-container">
+            <ion-button
+              expand="full"
+              class="footer__btn"
+              (click)="openContactsView()"
+              >Contactos</ion-button
+            >
+          </ion-col>
+          <ion-col size="6" class="footer__btn-container">
+            <ion-button
+              expand="full"
+              class="footer__btn"
+              (click)="openProductsView()"
+              >Productos</ion-button
+            >
+          </ion-col>
+        </ion-row>
+      </ion-grid>
     </div>
 
     <!-- vista de actividades -->
@@ -175,6 +223,55 @@
           </ion-row>
         </ion-grid>
       </div>
+    </div>
+
+    <!-- vista de contenido de Productos o Contactos -->
+
+    <div
+      *ngIf="isContactsView && htmlResponse || isProductsView && htmlResponse"
+      class="browser-container"
+    >
+      <ion-card class="browser-card">
+        <iframe
+          class="browser-content"
+          [src]="cardUrl"
+          frameborder="0"
+        ></iframe>
+      </ion-card>
+    </div>
+    <div
+      *ngIf="isContactsView && htmlResponse || isProductsView && htmlResponse"
+      class="ion-no-border browser-footer"
+    >
+      <ion-grid class="footer__contacts">
+        <ion-row>
+          <ion-col size="6" class="footer__btn-container">
+            <div class="back-btn-contacts" (click)="closeView()">
+              <ion-img
+                class="back-btn-img"
+                src="../../assets/icon/arrow-left-green.svg"
+              >
+              </ion-img>
+            </div>
+          </ion-col>
+          <ion-col size="6" class="footer__btn-container">
+            <div
+              class="back-btn-contacts"
+              (click)="openProductsView()"
+              *ngIf="isContactsView"
+            >
+              <p class="green-text">PRODUCTOS</p>
+            </div>
+            <div
+              class="back-btn-contacts"
+              (click)="openContactsView()"
+              *ngIf="isProductsView"
+            >
+              <p class="green-text">CONTACTOS</p>
+            </div>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
     </div>
   </div>
 </ion-content>

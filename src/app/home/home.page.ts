@@ -23,7 +23,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
-  styleUrls: ['home.page.scss']
+  styleUrls: ['home.page.scss'],
 })
 export class HomePage {
   @HostListener('document:keydown', ['$event'])
@@ -51,10 +51,12 @@ export class HomePage {
   };
 
   events: any[] = [];
+  isLoadingData: boolean = false;
   selectedEvent: any = null;
   selectedActivityEvent: any = null;
   result: any = null;
   isQrCameraActive: boolean = false;
+  isNFCActive: boolean = false;
   htmlResponse: any = null;
   token: string = '';
   cardUrl: any = null;
@@ -62,6 +64,9 @@ export class HomePage {
   isNfcAvailable: boolean = false;
   platformDevice: string = '';
   nfcMessage: string = '';
+  isContacts: boolean = false;
+  isContactsView: boolean = false;
+  isProductsView: boolean = false;
 
   constructor(
     private router: Router,
@@ -88,8 +93,13 @@ export class HomePage {
   }
 
   private async handleEscKey(): Promise<void> {
-    if (this.htmlResponse) {
+    if (this.htmlResponse && !this.isContactsView && !this.isProductsView) {
       this.backToActivities();
+    } else if (
+      this.htmlResponse &&
+      (this.isContactsView || this.isProductsView)
+    ) {
+      this.closeView();
     } else if (this.isQrCameraActive) {
       this.unselectActivityEvent();
     } else if (this.selectedActivityEvent) {
@@ -139,9 +149,12 @@ export class HomePage {
                   activityId
                 )
               ) {
+                const activityData = inputObject[eventName][activityId];
                 const activity = {
-                  id: activityId,
-                  name: inputObject[eventName][activityId],
+                  id: activityData.id,
+                  name: activityData.name,
+                  qr: activityData.qr,
+                  nfc: activityData.nfc,
                 };
 
                 activities.push(activity);
@@ -173,17 +186,25 @@ export class HomePage {
   }
 
   async ionViewDidEnter() {
+    this.isLoadingData = true;
     await this.getToken();
     await this.getKiosks();
-    this.platformDevice = this.nfcService.getPlatform()
-    this.isNfcAvailable = await this.nfcService.isSupported()
+    this.isContacts = await this.data.getContacts();
+    this.isLoadingData = false;
+    this.platformDevice = this.nfcService.getPlatform();
+    this.isNfcAvailable = await this.nfcService.isSupported();
   }
 
   initializeBackButtonCustomHandler(): void {
     this.platform.backButton.subscribeWithPriority(9999, async () => {
-      if (this.htmlResponse) {
+      if (this.htmlResponse && !this.isContactsView && !this.isProductsView) {
         this.backToActivities();
-      } else if (this.isQrCameraActive) {
+      } else if (
+        this.htmlResponse &&
+        (this.isContactsView || this.isProductsView)
+      ) {
+        this.closeView();
+      } else if (this.isQrCameraActive || this.isNFCActive) {
         this.unselectActivityEvent();
       } else if (this.selectedActivityEvent) {
         this.unselectActivityEvent();
@@ -229,24 +250,40 @@ export class HomePage {
         }
       }
     });
+    console.log(this.selectedEvent);
   }
 
   unselectEvent() {
     this.selectedEvent = null;
   }
 
-  async selectActivityEvent(activityEvent: object) {
+  async selectActivityEvent(activityEvent: any) {
+    console.log(activityEvent);
     // Modo producción
-    const allowed = await this.checkPermission();
-    if (allowed) {
-      this.renderer.addClass(
-        document.getElementById('content'),
-        'scanner-active'
-      );
-      this.renderer.addClass(document.body, 'scanner-active');
+
+    const nfc = activityEvent.nfc;
+    const qr = activityEvent.qr;
+
+    if ((nfc && qr) || (nfc && !qr)) {
       this.selectedActivityEvent = activityEvent;
-      this.isQrCameraActive = true;
-      await this.startScanner();
+      this.startNfcScan();
+    } else if (!nfc && qr) {
+      const allowed = await this.checkPermission();
+      if (allowed) {
+        this.renderer.addClass(
+          document.getElementById('content'),
+          'scanner-active'
+        );
+        this.renderer.addClass(document.body, 'scanner-active');
+        this.selectedActivityEvent = activityEvent;
+        this.isQrCameraActive = true;
+        await this.startScanner();
+      }
+    } else {
+      const alert = await this.advertising.showAlert(
+        'El evento seleccionado no ha sido definido correctamente'
+      );
+      alert.present();
     }
 
     // Modo testing
@@ -257,8 +294,32 @@ export class HomePage {
     // await this.postQr(this.result);
   }
 
+  async changeScanner() {
+    if (this.isNFCActive) {
+      const allowed = await this.checkPermission();
+      if (allowed) {
+        this.renderer.addClass(
+          document.getElementById('content'),
+          'scanner-active'
+        );
+        this.renderer.addClass(document.body, 'scanner-active');
+        this.isQrCameraActive = true;
+        await this.startScanner();
+      }
+    } else {
+      this.startNfcScan();
+    }
+  }
+
   unselectActivityEvent() {
-    this.stopScanner();
+    if (this.isQrCameraActive) {
+      this.stopScanner();
+    }
+
+    if (this.isNFCActive) {
+      this.nfcService.stopScanSession();
+      this.isNFCActive = false;
+    }
     this.actionRequested = null;
     this.result = null;
     this.selectedActivityEvent = null;
@@ -432,7 +493,9 @@ export class HomePage {
   }
 
   async handleRefresh(event: any) {
+    this.isLoadingData = true;
     await this.getKiosks();
+    this.isLoadingData = false;
     event.target.complete();
   }
 
@@ -445,16 +508,22 @@ export class HomePage {
     // if (this.selectedEvent.activities.length === 1) {
     //   this.selectedEvent = null;
     // }
-    const allowed = await this.checkPermission();
-    if (allowed) {
-      this.renderer.addClass(
-        document.getElementById('content'),
-        'scanner-active'
-      );
-      this.renderer.addClass(document.body, 'scanner-active');
-      this.isQrCameraActive = true;
-      await this.startScanner();
+
+    if (this.selectedActivityEvent.nfc && this.isNfcAvailable) {
+      this.startNfcScan();
+    } else {
+      const allowed = await this.checkPermission();
+      if (allowed) {
+        this.renderer.addClass(
+          document.getElementById('content'),
+          'scanner-active'
+        );
+        this.renderer.addClass(document.body, 'scanner-active');
+        this.isQrCameraActive = true;
+        await this.startScanner();
+      }
     }
+
     this.cdr.detectChanges();
   }
 
@@ -492,22 +561,133 @@ export class HomePage {
 
   async startNfcScan() {
     if (this.isNfcAvailable) {
-      console.log('el dispositivo si soporta NFC')
-      const scannedTag = this.nfcService.scannedTag$
-      await this.nfcService.startScanSession()
+      this.isNFCActive = true;
+      console.log('el dispositivo si soporta NFC');
+      const scannedTag = this.nfcService.scannedTag$;
+      await this.nfcService.startScanSession();
       if (this.platformDevice === 'ios') {
-        scannedTag.pipe(take(1), untilDestroyed(this))
-          .subscribe(async () => {
-            await this.nfcService.stopScanSession()
-            // Aquí se almacena el valor convertido en el TAG NFC
-            this.nfcMessage = this.nfcService.message
-          });
+        scannedTag.pipe(take(1), untilDestroyed(this)).subscribe(async () => {
+          await this.nfcService.stopScanSession();
+          // Aquí se almacena el valor convertido en el TAG NFC
+          this.nfcMessage = this.nfcService.message;
+        });
       } else {
         // Aquí se almacena el valor convertido en el TAG NFC
-        this.nfcMessage = this.nfcService.message
+        this.nfcMessage = this.nfcService.message;
+      }
+
+      this.result = this.nfcMessage;
+      try {
+        const isUrl = this.isValidUrl(this.result);
+        if (isUrl) {
+          await this.postQr(this.result);
+          if (!this.htmlResponse) {
+            this.nfcService.stopScanSession();
+            const toast = await this.toast.create({
+              message: 'Etiqueta inválida',
+              duration: 3000,
+              cssClass: 'custom-toast',
+              position: 'bottom',
+            });
+            toast.present();
+            this.startNfcScan();
+            return;
+          } else {
+            this.nfcService.stopScanSession();
+          }
+        } else {
+          await this.postQrTwo(this.result);
+          if (!this.htmlResponse) {
+            this.nfcService.stopScanSession();
+            const toast = await this.toast.create({
+              message: 'Etiqueta inválida',
+              duration: 3000,
+              cssClass: 'custom-toast',
+              position: 'bottom',
+            });
+            toast.present();
+            this.startNfcScan();
+            return;
+          } else {
+            this.nfcService.stopScanSession();
+          }
+        }
+      } catch (err) {
+        this.nfcService.stopScanSession();
+        const toast = await this.toast.create({
+          message: 'Etiqueta inválida',
+          duration: 3000,
+          cssClass: 'custom-toast',
+          position: 'bottom',
+        });
+        toast.present();
+        this.startNfcScan();
+        return;
       }
     } else {
-      console.log('el dispositivo no soporta NFC')
+      console.log('el dispositivo no soporta NFC');
+      const alert = await this.advertising.showAlert(
+        'Tu dispositivo no soporta la lectura con NFC'
+      );
+      alert.present();
     }
+  }
+
+  async openProductsView() {
+    const loading = await this.advertising.showLoading('cargando');
+    try {
+      loading.present();
+      const res = await this.api.getProducts(this.token).toPromise();
+      this.htmlResponse = res;
+      console.log(res);
+      this.cardUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+        'https://app.registrasso.com/productos'
+      );
+      this.isContactsView = false;
+      this.isProductsView = true;
+      this.cdr.detectChanges();
+    } catch (err) {
+      console.log(err);
+      const alert = await this.advertising.showAlert(
+        'No se ha podido cargar la información'
+      );
+      alert.present();
+    } finally {
+      loading.dismiss();
+    }
+  }
+
+  async openContactsView() {
+    const loading = await this.advertising.showLoading('cargando');
+    try {
+      loading.present();
+      const res = await this.api.getContacts(this.token).toPromise();
+      this.htmlResponse = res;
+      console.log(res);
+      this.cardUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+        'https://app.registrasso.com/contactos'
+      );
+      this.cdr.detectChanges();
+      this.isProductsView = false;
+      this.isContactsView = true;
+    } catch (err) {
+      console.log(err);
+      const alert = await this.advertising.showAlert(
+        'No se ha podido cargar la información'
+      );
+      alert.present();
+    } finally {
+      loading.dismiss();
+    }
+  }
+
+  async closeView() {
+    this.isLoadingData = true;
+    this.isContactsView = false;
+    this.isProductsView = false;
+    this.cardUrl = null;
+    this.htmlResponse = null;
+    await this.getKiosks();
+    this.isLoadingData = false;
   }
 }

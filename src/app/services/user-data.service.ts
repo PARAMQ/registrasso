@@ -24,4 +24,14 @@ export class UserDataService {
     const res = await this._storage?.set('token', token);
     return res;
   }
+
+  async getContacts(): Promise<boolean> {
+    const res = (await this._storage?.get('contacts')) || false;
+    return res;
+  }
+
+  async setContacts(contacts: boolean) {
+    const res = await this._storage?.set('contacts', contacts);
+    return res;
+  }
 }

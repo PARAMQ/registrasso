@@ -26,11 +26,10 @@ export class ApiService {
   // Kiosks //
 
   getKiosks(token: string) {
-    const url = this.url + 'kiosks/get';
+    const url = this.url + 'kiosks/get/v2';
     const headers = {
       Authorization: `Bearer ${token}`,
     };
-    console.log(headers);
     return lastValueFrom(this.http.get<any>(url, { headers: headers }));
   }
 
@@ -68,5 +67,21 @@ export class ApiService {
     body.append('kiosk', kioskId);
 
     return lastValueFrom(this.http.post<any>(url, body, { headers: headers }));
+  }
+
+  getProducts(token: string) {
+    const url = 'https://app.registrasso.com/productos';
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
+    return this.http.get(url, { headers, responseType: 'text' });
+  }
+
+  getContacts(token: string) {
+    const url = 'https://app.registrasso.com/contactos';
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
+    return this.http.get(url, { headers, responseType: 'text' });
   }
 }
