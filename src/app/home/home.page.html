@@ -45,9 +45,11 @@
   >
     <ion-img src="../../assets/icon/nfc.svg" class="ion-text-center"></ion-img>
 
+    <!--
     <p>
       {{ nfcMessage }}
     </p>
+    -->
 
     <div
       class="bottom-left-img"
@@ -176,7 +178,7 @@
     <!-- vista de contenido de actividad -->
 
     <div
-      *ngIf="selectedEvent && selectedActivityEvent && !isQrCameraActive && htmlResponse"
+      *ngIf="selectedEvent && selectedActivityEvent && !isQrCameraActive && !isNFCActive && htmlResponse"
       class="browser-container"
     >
       <ion-card class="browser-card">

@@ -403,12 +403,14 @@ export class HomePage {
   }
 
   async postQr(qrResult: string) {
+    console.log(qrResult)
     try {
       const res = await this.api.postQr(
         qrResult,
-        this.selectedActivityEvent.id,
+        this .selectedActivityEvent.id,
         this.token
       );
+      console.log(res)
       if (res?.card) {
         this.htmlResponse = res;
         this.cardUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
@@ -578,8 +580,10 @@ export class HomePage {
       scannedTag.pipe(take(1), untilDestroyed(this)).subscribe(async () => {
         await this.NfcOldService.stopScanSession();
         // Aquí se almacena el valor convertido en el TAG NFC
-        this.result = this.NfcOldService.message;
+        console.log(typeof(this.NfcOldService.message))
+        this.result = String(this.NfcOldService.message);
         this.nfcMessage = this.NfcOldService.message;
+        this.isNFCActive = false
         await this.getResult()
       });
     } else {
