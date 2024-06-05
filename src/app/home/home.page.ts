@@ -16,9 +16,11 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { UserDataService } from '../services/user-data.service';
 import { Capacitor } from '@capacitor/core';
 import { NfcService } from '../services/nfc.service';
+import { NfcOldService } from '../services/nfc-old.service';
 import { NfcTag } from '@capawesome-team/capacitor-nfc';
 import { Observable, take } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import {PlatformService} from "../services/platform.service";
 
 @Component({
   selector: 'app-home',
@@ -68,6 +70,9 @@ export class HomePage {
   isContactsView: boolean = false;
   isProductsView: boolean = false;
 
+  public scannedTag$: Observable<NfcTag>;
+  private showLastScannedTag = false;
+
   constructor(
     private router: Router,
     private advertising: WarningsService,
@@ -79,9 +84,14 @@ export class HomePage {
     private data: UserDataService,
     private toast: ToastController,
     private cdr: ChangeDetectorRef,
-    private nfcService: NfcService
+    private readonly nfcService: NfcService,
+    private NfcOldService: NfcOldService,
+    private readonly platformService: PlatformService,
   ) {
     // this.randomlyModifyEvents();
+    this.scannedTag$ = this.showLastScannedTag
+      ? this.nfcService.lastScannedTag$
+      : this.nfcService.scannedTag$;
     this.initializeBackButtonCustomHandler();
   }
 
@@ -266,7 +276,7 @@ export class HomePage {
 
     if ((nfc && qr) || (nfc && !qr)) {
       this.selectedActivityEvent = activityEvent;
-      this.startNfcScan();
+      await this.startNfcScan();
     } else if (!nfc && qr) {
       const allowed = await this.checkPermission();
       if (allowed) {
@@ -307,7 +317,7 @@ export class HomePage {
         await this.startScanner();
       }
     } else {
-      this.startNfcScan();
+      await this.startNfcScan();
     }
   }
 
@@ -510,7 +520,7 @@ export class HomePage {
     // }
 
     if (this.selectedActivityEvent.nfc && this.isNfcAvailable) {
-      this.startNfcScan();
+      await this.startNfcScan();
     } else {
       const allowed = await this.checkPermission();
       if (allowed) {
@@ -563,73 +573,67 @@ export class HomePage {
     if (this.isNfcAvailable) {
       this.isNFCActive = true;
       console.log('el dispositivo si soporta NFC');
-      const scannedTag = this.nfcService.scannedTag$;
-      await this.nfcService.startScanSession();
-      if (this.platformDevice === 'ios') {
-        scannedTag.pipe(take(1), untilDestroyed(this)).subscribe(async () => {
-          await this.nfcService.stopScanSession();
-          // Aquí se almacena el valor convertido en el TAG NFC
-          this.nfcMessage = this.nfcService.message;
-        });
-      } else {
+      const scannedTag = this.NfcOldService.scannedTag$;
+      await this.NfcOldService.startScanSession();
+      scannedTag.pipe(take(1), untilDestroyed(this)).subscribe(async () => {
+        await this.NfcOldService.stopScanSession();
         // Aquí se almacena el valor convertido en el TAG NFC
-        this.nfcMessage = this.nfcService.message;
-      }
-
-      this.result = this.nfcMessage;
-      try {
-        const isUrl = this.isValidUrl(this.result);
-        if (isUrl) {
-          await this.postQr(this.result);
-          if (!this.htmlResponse) {
-            this.nfcService.stopScanSession();
-            const toast = await this.toast.create({
-              message: 'Etiqueta inválida',
-              duration: 3000,
-              cssClass: 'custom-toast',
-              position: 'bottom',
-            });
-            toast.present();
-            this.startNfcScan();
-            return;
-          } else {
-            this.nfcService.stopScanSession();
-          }
-        } else {
-          await this.postQrTwo(this.result);
-          if (!this.htmlResponse) {
-            this.nfcService.stopScanSession();
-            const toast = await this.toast.create({
-              message: 'Etiqueta inválida',
-              duration: 3000,
-              cssClass: 'custom-toast',
-              position: 'bottom',
-            });
-            toast.present();
-            this.startNfcScan();
-            return;
-          } else {
-            this.nfcService.stopScanSession();
-          }
-        }
-      } catch (err) {
-        this.nfcService.stopScanSession();
-        const toast = await this.toast.create({
-          message: 'Etiqueta inválida',
-          duration: 3000,
-          cssClass: 'custom-toast',
-          position: 'bottom',
-        });
-        toast.present();
-        this.startNfcScan();
-        return;
-      }
+        this.result = this.NfcOldService.message;
+        this.nfcMessage = this.NfcOldService.message;
+        await this.getResult()
+      });
     } else {
       console.log('el dispositivo no soporta NFC');
       const alert = await this.advertising.showAlert(
         'Tu dispositivo no soporta la lectura con NFC'
       );
       alert.present();
+    }
+  }
+
+  async getResult () {
+    console.log('Hola desde la petición')
+    try {
+      const isUrl = this.isValidUrl(this.result);
+      if (isUrl) {
+        console.log('Validar URL')
+        console.log(isUrl)
+        await this.postQr(this.result);
+        if (!this.htmlResponse) {
+          const toast = await this.toast.create({
+            message: 'Etiqueta inválida',
+            duration: 3000,
+            cssClass: 'custom-toast',
+            position: 'bottom',
+          });
+          toast.present();
+          await this.startNfcScan();
+          return;
+        }
+      } else {
+        await this.postQrTwo(this.result);
+        if (!this.htmlResponse) {
+          const toast = await this.toast.create({
+            message: 'Etiqueta inválida',
+            duration: 3000,
+            cssClass: 'custom-toast',
+            position: 'bottom',
+          });
+          toast.present();
+          await this.startNfcScan();
+          return;
+        }
+      }
+    } catch (err) {
+      const toast = await this.toast.create({
+        message: 'Etiqueta inválida',
+        duration: 3000,
+        cssClass: 'custom-toast',
+        position: 'bottom',
+      });
+      toast.present();
+      await this.startNfcScan();
+      return;
     }
   }
 

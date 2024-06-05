@@ -44,6 +44,11 @@
     *ngIf="!isQrCameraActive && isNFCActive"
   >
     <ion-img src="../../assets/icon/nfc.svg" class="ion-text-center"></ion-img>
+
+    <p>
+      {{ nfcMessage }}
+    </p>
+
     <div
       class="bottom-left-img"
       (click)="changeScanner()"
