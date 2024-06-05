@@ -20,7 +20,7 @@ import { NfcOldService } from '../services/nfc-old.service';
 import { NfcTag } from '@capawesome-team/capacitor-nfc';
 import { Observable, take } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import {PlatformService} from "../services/platform.service";
+import { PlatformService } from '../services/platform.service';
 
 @Component({
   selector: 'app-home',
@@ -86,7 +86,7 @@ export class HomePage {
     private cdr: ChangeDetectorRef,
     private readonly nfcService: NfcService,
     private NfcOldService: NfcOldService,
-    private readonly platformService: PlatformService,
+    private readonly platformService: PlatformService
   ) {
     // this.randomlyModifyEvents();
     this.scannedTag$ = this.showLastScannedTag
@@ -276,7 +276,7 @@ export class HomePage {
 
     if ((nfc && qr) || (nfc && !qr)) {
       this.selectedActivityEvent = activityEvent;
-      await this.startNfcScan();
+      await this.startNfcScan(qr);
     } else if (!nfc && qr) {
       const allowed = await this.checkPermission();
       if (allowed) {
@@ -403,14 +403,14 @@ export class HomePage {
   }
 
   async postQr(qrResult: string) {
-    console.log(qrResult)
+    console.log(qrResult);
     try {
       const res = await this.api.postQr(
         qrResult,
-        this .selectedActivityEvent.id,
+        this.selectedActivityEvent.id,
         this.token
       );
-      console.log(res)
+      console.log(res);
       if (res?.card) {
         this.htmlResponse = res;
         this.cardUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
@@ -571,7 +571,7 @@ export class HomePage {
     }
   }
 
-  async startNfcScan() {
+  async startNfcScan(isQrSupported: boolean = true) {
     if (this.isNfcAvailable) {
       this.isNFCActive = true;
       console.log('el dispositivo si soporta NFC');
@@ -580,28 +580,37 @@ export class HomePage {
       scannedTag.pipe(take(1), untilDestroyed(this)).subscribe(async () => {
         await this.NfcOldService.stopScanSession();
         // Aquí se almacena el valor convertido en el TAG NFC
-        console.log(typeof(this.NfcOldService.message))
+        console.log(typeof this.NfcOldService.message);
         this.result = String(this.NfcOldService.message);
         this.nfcMessage = this.NfcOldService.message;
-        this.isNFCActive = false
-        await this.getResult()
+        this.isNFCActive = false;
+        await this.getResult();
       });
     } else {
-      console.log('el dispositivo no soporta NFC');
-      const alert = await this.advertising.showAlert(
-        'Tu dispositivo no soporta la lectura con NFC'
-      );
-      alert.present();
+      if (isQrSupported) {
+        const allowed = await this.checkPermission();
+        if (allowed) {
+          this.renderer.addClass(
+            document.getElementById('content'),
+            'scanner-active'
+          );
+          this.renderer.addClass(document.body, 'scanner-active');
+          this.isQrCameraActive = true;
+          await this.startScanner();
+        } else {
+          console.log('el dispositivo no soporta NFC');
+          const alert = await this.advertising.showAlert(
+            'Tu dispositivo no soporta la lectura con NFC'
+          );
+          alert.present();
+        }
+      }
     }
   }
-
-  async getResult () {
-    console.log('Hola desde la petición')
+  async getResult() {
     try {
       const isUrl = this.isValidUrl(this.result);
       if (isUrl) {
-        console.log('Validar URL')
-        console.log(isUrl)
         await this.postQr(this.result);
         if (!this.htmlResponse) {
           const toast = await this.toast.create({
