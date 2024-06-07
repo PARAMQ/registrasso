@@ -304,7 +304,7 @@ export class HomePage {
     // await this.postQr(this.result);
   }
 
-  async changeScanner() {
+  async changeScanner(selectedActivityEvent: any) {
     if (this.isNFCActive) {
       const allowed = await this.checkPermission();
       if (allowed) {
@@ -317,7 +317,8 @@ export class HomePage {
         await this.startScanner();
       }
     } else {
-      await this.startNfcScan();
+      const qrSupport = selectedActivityEvent.qr;
+      await this.startNfcScan(qrSupport);
     }
   }
 
@@ -354,8 +355,9 @@ export class HomePage {
 
       try {
         const isUrl = this.isValidUrl(this.result);
+        const upperCaseResult = String(this.result).toUpperCase();
         if (isUrl) {
-          await this.postQr(this.result);
+          await this.postQr(upperCaseResult);
           if (!this.htmlResponse) {
             BarcodeScanner.stopScan();
             const toast = await this.toast.create({
@@ -371,7 +373,7 @@ export class HomePage {
             this.stopScanner();
           }
         } else {
-          await this.postQrTwo(this.result);
+          await this.postQrTwo(upperCaseResult);
           if (!this.htmlResponse) {
             BarcodeScanner.stopScan();
             const toast = await this.toast.create({
@@ -571,7 +573,7 @@ export class HomePage {
     }
   }
 
-  async startNfcScan(isQrSupported: boolean = true) {
+  async startNfcScan(isQrSupported: boolean = false) {
     if (this.isNfcAvailable) {
       this.isNFCActive = true;
       console.log('el dispositivo si soporta NFC');

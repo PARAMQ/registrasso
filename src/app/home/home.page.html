@@ -25,6 +25,9 @@
       <span class="activity-title">{{selectedActivityEvent.name}}</span>
     </div>
   </div>
+
+  <!-- body qr -->
+
   <div
     class="qr-body"
     id="scanner-container"
@@ -32,12 +35,15 @@
   >
     <div
       class="bottom-left-img"
-      (click)="changeScanner()"
-      *ngIf="selectedActivityEvent.nfc && isNfcAvailable"
+      (click)="changeScanner(selectedActivityEvent)"
+      *ngIf="selectedActivityEvent.nfc"
     >
-      <ion-img src="../../assets/icon/qr.svg"></ion-img>
+      <ion-img src="../../assets/icon/nfc.svg"></ion-img>
     </div>
   </div>
+
+  <!-- body nfc -->
+
   <div
     class="nfc-body"
     id="scanner-container"
@@ -45,15 +51,9 @@
   >
     <ion-img src="../../assets/icon/nfc.svg" class="ion-text-center"></ion-img>
 
-    <!--
-    <p>
-      {{ nfcMessage }}
-    </p>
-    -->
-
     <div
       class="bottom-left-img"
-      (click)="changeScanner()"
+      (click)="changeScanner(selectedActivityEvent)"
       *ngIf="selectedActivityEvent.qr"
     >
       <ion-img src="../../assets/icon/qr.svg"></ion-img>
