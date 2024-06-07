@@ -355,9 +355,8 @@ export class HomePage {
 
       try {
         const isUrl = this.isValidUrl(this.result);
-        const upperCaseResult = String(this.result).toUpperCase();
         if (isUrl) {
-          await this.postQr(upperCaseResult);
+          await this.postQr(this.result);
           if (!this.htmlResponse) {
             BarcodeScanner.stopScan();
             const toast = await this.toast.create({
@@ -373,7 +372,7 @@ export class HomePage {
             this.stopScanner();
           }
         } else {
-          await this.postQrTwo(upperCaseResult);
+          await this.postQrTwo(this.result);
           if (!this.htmlResponse) {
             BarcodeScanner.stopScan();
             const toast = await this.toast.create({
@@ -489,7 +488,8 @@ export class HomePage {
     // Puedes usar expresiones regulares u otras técnicas
     // Devuelve true si es una URL válida, false si no lo es
     // Ejemplo simple para verificar si comienza con "http" o "https"
-    return /^https?:\/\//.test(url);
+    const lowerCaseUrl = String(url).toLowerCase();
+    return /^https?:\/\//.test(lowerCaseUrl);
   }
 
   stopScanner() {
