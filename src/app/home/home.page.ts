@@ -311,7 +311,6 @@ export class HomePage {
     if (this.isNFCActive) {
       const allowed = await this.checkPermission();
       if (allowed) {
-        await this.NfcOldService.stopScanSession();
         this.isNFCActive = false;
         this.renderer.addClass(
           document.getElementById('content'),
