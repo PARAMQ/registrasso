@@ -274,8 +274,8 @@ export class HomePage {
     const nfc = activityEvent.nfc;
     const qr = activityEvent.qr;
 
+    this.selectedActivityEvent = activityEvent;
     if ((nfc && qr) || (nfc && !qr)) {
-      this.selectedActivityEvent = activityEvent;
       await this.startNfcScan(qr);
     } else if (!nfc && qr) {
       const allowed = await this.checkPermission();
@@ -288,8 +288,11 @@ export class HomePage {
         this.selectedActivityEvent = activityEvent;
         this.isQrCameraActive = true;
         await this.startScanner();
+      } else {
+        this.selectedActivityEvent = null;
       }
     } else {
+      this.selectedActivityEvent = null;
       const alert = await this.advertising.showAlert(
         'El evento seleccionado no ha sido definido correctamente'
       );
@@ -599,13 +602,12 @@ export class HomePage {
           this.renderer.addClass(document.body, 'scanner-active');
           this.isQrCameraActive = true;
           await this.startScanner();
-        } else {
-          console.log('el dispositivo no soporta NFC');
-          const alert = await this.advertising.showAlert(
-            'Tu dispositivo no soporta la lectura con NFC'
-          );
-          alert.present();
         }
+      } else {
+        const alert = await this.advertising.showAlert(
+          'Tu dispositivo no soporta la lectura con NFC'
+        );
+        alert.present();
       }
     }
   }
