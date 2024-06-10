@@ -307,10 +307,12 @@ export class HomePage {
     // await this.postQr(this.result);
   }
 
-  async changeScanner(selectedActivityEvent: any) {
+  async changeScanner() {
     if (this.isNFCActive) {
       const allowed = await this.checkPermission();
       if (allowed) {
+        await this.NfcOldService.stopScanSession();
+        this.isNFCActive = false;
         this.renderer.addClass(
           document.getElementById('content'),
           'scanner-active'
@@ -320,8 +322,30 @@ export class HomePage {
         await this.startScanner();
       }
     } else {
-      const qrSupport = selectedActivityEvent.qr;
-      await this.startNfcScan(qrSupport);
+      if (this.isNfcAvailable) {
+        this.stopScanner();
+        this.isNFCActive = true;
+        console.log('el dispositivo si soporta NFC');
+        const scannedTag = this.NfcOldService.scannedTag$;
+        await this.NfcOldService.startScanSession();
+        scannedTag.pipe(take(1), untilDestroyed(this)).subscribe(async () => {
+          await this.NfcOldService.stopScanSession();
+          // Aquí se almacena el valor convertido en el TAG NFC
+          console.log(typeof this.NfcOldService.message);
+          this.result = String(this.NfcOldService.message);
+          this.nfcMessage = this.NfcOldService.message;
+          this.isNFCActive = false;
+          await this.getResult();
+        });
+      } else {
+        const toast = await this.toast.create({
+          message: 'Tu dispositivo no soporta la lectura de etiquetas NFC',
+          duration: 3000,
+          cssClass: 'custom-toast',
+          position: 'bottom',
+        });
+        toast.present();
+      }
     }
   }
 
@@ -608,6 +632,7 @@ export class HomePage {
           'Tu dispositivo no soporta la lectura con NFC'
         );
         alert.present();
+        this.selectedActivityEvent = null;
       }
     }
   }

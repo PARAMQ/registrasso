@@ -35,7 +35,7 @@
   >
     <div
       class="bottom-left-img"
-      (click)="changeScanner(selectedActivityEvent)"
+      (click)="changeScanner()"
       *ngIf="selectedActivityEvent.nfc"
     >
       <ion-img src="../../assets/icon/nfc.svg"></ion-img>
@@ -53,7 +53,7 @@
 
     <div
       class="bottom-left-img"
-      (click)="changeScanner(selectedActivityEvent)"
+      (click)="changeScanner()"
       *ngIf="selectedActivityEvent.qr"
     >
       <ion-img src="../../assets/icon/qr.svg"></ion-img>
