@@ -69,6 +69,7 @@ export class HomePage {
   isContacts: boolean = false;
   isContactsView: boolean = false;
   isProductsView: boolean = false;
+  selectedScanner: string | null = null;
 
   public scannedTag$: Observable<NfcTag>;
   private showLastScannedTag = false;
@@ -265,9 +266,11 @@ export class HomePage {
 
   unselectEvent() {
     this.selectedEvent = null;
+    this.selectedScanner = null;
   }
 
   async selectActivityEvent(activityEvent: any) {
+    this.selectedScanner = null;
     console.log(activityEvent);
     // Modo producción
 
@@ -311,7 +314,6 @@ export class HomePage {
     if (this.isNFCActive) {
       const allowed = await this.checkPermission();
       if (allowed) {
-        await this.NfcOldService.stopScanSession();
         this.isNFCActive = false;
         this.renderer.addClass(
           document.getElementById('content'),
@@ -319,12 +321,14 @@ export class HomePage {
         );
         this.renderer.addClass(document.body, 'scanner-active');
         this.isQrCameraActive = true;
+        this.selectedScanner = 'qr';
         await this.startScanner();
       }
     } else {
       if (this.isNfcAvailable) {
         this.stopScanner();
         this.isNFCActive = true;
+        this.selectedScanner = 'nfc';
         console.log('el dispositivo si soporta NFC');
         const scannedTag = this.NfcOldService.scannedTag$;
         await this.NfcOldService.startScanSession();
@@ -550,18 +554,35 @@ export class HomePage {
     //   this.selectedEvent = null;
     // }
 
-    if (this.selectedActivityEvent.nfc && this.isNfcAvailable) {
-      await this.startNfcScan();
+    if (this.selectedScanner) {
+      if (this.selectedScanner === 'nfc') {
+        await this.startNfcScan();
+      } else {
+        const allowed = await this.checkPermission();
+        if (allowed) {
+          this.renderer.addClass(
+            document.getElementById('content'),
+            'scanner-active'
+          );
+          this.renderer.addClass(document.body, 'scanner-active');
+          this.isQrCameraActive = true;
+          await this.startScanner();
+        }
+      }
     } else {
-      const allowed = await this.checkPermission();
-      if (allowed) {
-        this.renderer.addClass(
-          document.getElementById('content'),
-          'scanner-active'
-        );
-        this.renderer.addClass(document.body, 'scanner-active');
-        this.isQrCameraActive = true;
-        await this.startScanner();
+      if (this.selectedActivityEvent.nfc && this.isNfcAvailable) {
+        await this.startNfcScan();
+      } else {
+        const allowed = await this.checkPermission();
+        if (allowed) {
+          this.renderer.addClass(
+            document.getElementById('content'),
+            'scanner-active'
+          );
+          this.renderer.addClass(document.body, 'scanner-active');
+          this.isQrCameraActive = true;
+          await this.startScanner();
+        }
       }
     }
 
